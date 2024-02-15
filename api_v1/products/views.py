@@ -5,7 +5,8 @@ from fastapi import APIRouter, status, HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from . import crud
-from .schemas import Product, ProductCreate
+from .schemas import Product, ProductCreate, ProductUpdate, ProductUpdatePartial
+from .dependencies import get_product_by_id
 from core.models import helper
 
 
@@ -25,14 +26,27 @@ async def create_product(
 
 
 @router.get("/{product_id}/", response_model=Product)
-async def get_product(
-    product_id: int,
+async def get_product(product: Product = Depends(get_product_by_id)):
+    return product
+
+
+@router.put("/{product_id}/")
+async def update_product(
+    product_update: ProductUpdate,
+    product: Product = Depends(get_product_by_id),
     session: AsyncSession = Depends(helper.dependency),
 ):
-    product = await crud.get_product_by_id(session=session, product_id=product_id)
-    if product is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Product '{product_id}'- is not found",
-        )
-    return product
+    return await crud.update_product(
+        session=session, product=product, product_update=product_update
+    )
+
+
+@router.patch("/{product_id}/")
+async def update_product_partial(
+    product_update: ProductUpdatePartial,
+    product: Product = Depends(get_product_by_id),
+    session: AsyncSession = Depends(helper.dependency),
+):
+    return await crud.update_product(
+        session=session, product=product, product_update=product_update, partial=True
+    )

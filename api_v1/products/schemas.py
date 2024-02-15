@@ -1,5 +1,6 @@
-from pydantic import BaseModel, Field, ConfigDict
 from typing import Union
+
+from pydantic import BaseModel, ConfigDict
 
 
 class ProductBase(BaseModel):
@@ -13,3 +14,11 @@ class Product(ProductBase):
 
 class ProductCreate(ProductBase):
     pass
+
+
+class ProductUpdate(ProductBase):
+    pass
+
+
+class ProductUpdatePartial(ProductBase):
+    name: Union[str, None] = None

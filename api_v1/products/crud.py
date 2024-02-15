@@ -1,10 +1,10 @@
 from sqlalchemy import select
 from sqlalchemy.engine import Result
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Union
+from typing import List, Union, Any
 
 from core.models import Product
-from .schemas import ProductCreate
+from .schemas import ProductCreate, ProductUpdate, ProductUpdatePartial
 
 
 async def get_products(session: AsyncSession) -> List[Product]:
@@ -25,6 +25,19 @@ async def get_product_by_id(
 async def create_product(session: AsyncSession, product: ProductCreate) -> Product:
     product = Product(**product.model_dump())
     session.add(product)
+    await session.commit()
+    await session.refresh(product)
+    return product
+
+
+async def update_product(
+    session: AsyncSession,
+    product: Product,
+    product_update: Union[ProductUpdate, ProductUpdatePartial],
+    partial: bool = False,
+) -> Product:
+    for key, value in product_update.model_dump(exclude_unset=partial).items():
+        setattr(product, key, value)
     await session.commit()
     await session.refresh(product)
     return product
