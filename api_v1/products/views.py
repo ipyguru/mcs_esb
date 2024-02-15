@@ -18,7 +18,7 @@ async def get_products(session: AsyncSession = Depends(helper.dependency)):
     return await crud.get_products(session=session)
 
 
-@router.post("/", response_model=Product)
+@router.post("/", response_model=Product, status_code=status.HTTP_201_CREATED)
 async def create_product(
     product: ProductCreate, session: AsyncSession = Depends(helper.dependency)
 ):
