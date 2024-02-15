@@ -1,11 +1,37 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 
-from item.view import router as item_router
+from core.models import Base, helper
+from core.settings import settings
 
-app = FastAPI()
-app.include_router(item_router)
+from api_v1 import router as api_v1_router
 
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
+"""
+Создание и инициализация базы данных:
+"""
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    async with helper.engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
+
+"""
+Подключение роутов:
+"""
+app.include_router(api_v1_router, prefix=settings.api_v1_prefix)
+
+
+"""
+Запуск сервера:
+"""
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run("main:app", reload=True)
