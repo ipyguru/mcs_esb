@@ -1,8 +1,10 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from sqladmin import Admin
 
-from core.models import Base, helper
+from core import admin as admin_views
+from core.models import helper
 from core.settings import settings
 
 from api_v1 import router as api_v1_router
@@ -22,6 +24,14 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+
+"""
+Подключение админки:
+"""
+admin = Admin(app, helper.engine, title="Администрирование")
+admin.add_view(admin_views.ProductAdmin)
+admin.add_view(admin_views.CustomerAdmin)
+admin.add_view(admin_views.CustomerProductAdmin)
 
 """
 Подключение роутов:
