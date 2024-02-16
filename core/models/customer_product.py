@@ -1,6 +1,10 @@
+from typing import TYPE_CHECKING
 from .base import Base
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String, Text, ForeignKey
+from sqlalchemy import String, Text, ForeignKey, relationship
+
+if TYPE_CHECKING:
+    from .product import Product  # noqa: F401
 
 
 class CustomerProduct(Base):
@@ -15,6 +19,10 @@ class CustomerProduct(Base):
     product_id: Mapped[int] = mapped_column(
         ForeignKey("products.id"),
         nullable=False,
+    )
+
+    product: Mapped["Product"] = mapped_column(
+        relationship("Product", back_populates="customer_products"),
     )
 
     def __repr__(self):
