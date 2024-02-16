@@ -1,10 +1,13 @@
 from typing import TYPE_CHECKING
+
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import Text, ForeignKey
+
 from .base import Base
-from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String, Text, ForeignKey, relationship
 
 if TYPE_CHECKING:
     from .product import Product  # noqa: F401
+    from .customer import Customer  # noqa: F401
 
 
 class CustomerProduct(Base):
@@ -21,8 +24,17 @@ class CustomerProduct(Base):
         nullable=False,
     )
 
-    product: Mapped["Product"] = mapped_column(
-        relationship("Product", back_populates="customer_products"),
+    customer_id: Mapped[int] = mapped_column(
+        ForeignKey("customers.id"),
+        nullable=False,
+    )
+
+    product: Mapped["Product"] = relationship(
+        "Product", back_populates="customer_products"
+    )
+
+    customer: Mapped["Customer"] = relationship(
+        "Customer", back_populates="customer_products"
     )
 
     def __repr__(self):
