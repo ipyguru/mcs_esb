@@ -15,8 +15,9 @@ from api_v1 import router as api_v1_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    async with helper.engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    """Мы используем alembic для миграции базы данных."""
+    # async with helper.engine.begin() as conn:
+    #     await conn.run_sync(Base.metadata.create_all)
     yield
 
 
