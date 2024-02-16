@@ -1,4 +1,9 @@
 # Работа с миграциями
+## Перед применением миграций
+```python
+1. В core.__init__.py убедиться, что в переменной __all__ прописаны все модели 
+```
+
 ## Сгенерировать миграцию
 ```python
 alembic revision --autogenerate -m "name_of_migration" 
