@@ -7,13 +7,23 @@ class ProductAdmin(ModelView, model=Product):
     name = "Товар"
     name_plural = "Товары"
 
-    column_list = ["id", "name"]
-    column_searchable_list = ["name"]
-    column_filters = ["name"]
+    column_list = ["id", "name", "type", "guid_bp"]
+    column_searchable_list = [
+        "name",
+        "type",
+    ]
+
     column_sortable_list = ["id", "name"]
     column_default_sort = ("id", True)
 
-    column_details_list = ["id", "name", "customer_products"]
+    column_details_list = [
+        "type",
+        "id",
+        "name",
+        "guid_bp",
+        "guid_pr",
+        "customer_products",
+    ]
 
 
 class CustomerAdmin(ModelView, model=Customer):
@@ -22,7 +32,6 @@ class CustomerAdmin(ModelView, model=Customer):
 
     column_list = ["id", "name", "inn"]
     column_searchable_list = ["name", "inn"]
-    column_filters = ["name", "inn"]
     column_sortable_list = ["id", "name"]
     column_default_sort = ("id", True)
 

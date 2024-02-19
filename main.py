@@ -23,7 +23,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(lifespan=lifespan, title="Шина предприятия", version="0.1.0")
 
 """
 Подключение админки:

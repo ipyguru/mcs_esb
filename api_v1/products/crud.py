@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.engine import Result
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Union, Any
+from typing import List, Union
 
 from core.models import Product
 from .schemas import ProductCreate, ProductUpdate, ProductUpdatePartial
