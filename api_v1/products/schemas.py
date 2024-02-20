@@ -1,9 +1,13 @@
-from enum import Enum
 from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict
 
 from core import ProductTypes
+
+
+"""
+Product schema
+"""
 
 
 class ProductBase(BaseModel):
@@ -19,8 +23,9 @@ class Product(ProductBase):
 
 
 class ProductPublic(Product):
-    class Config:
-        from_attributes = True
+    pass
+    # class Config:
+    #     from_attributes = True
 
 
 class ProductCreate(ProductBase):
