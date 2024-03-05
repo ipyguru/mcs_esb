@@ -16,6 +16,10 @@ class PackageMessage(BaseModel):
     messages: List[Any]
 
 
-class Query(BaseModel):
+class GetMessages(BaseModel):
     exchange: str = "amq.topic"
     queue: str
+
+
+class Ask(BaseModel):
+    delivery_tags: List[int]
