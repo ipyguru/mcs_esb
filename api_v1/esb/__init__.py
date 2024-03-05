@@ -1,11 +1,11 @@
 import json
-from typing import List, Any
-
 import pika
-from pika.exceptions import ConnectionClosed
+
+from typing import List, Any
 
 from api_v1.esb.schemas import Package, GetMessages, PackageMessage, Ask
 from core.settings import settings
+from core.logger import logger
 
 
 class RabbitMQManager:
@@ -17,19 +17,34 @@ class RabbitMQManager:
 
     def connect(self):
         if not self.connection or self.connection.is_closed:
+            logger.info(" ------ Подключение к RabbitMQ ------")
             self.connection = pika.BlockingConnection(self.params)
             self.channel = self.connection.channel()
 
-    def __del__(self):
-        if self.connection and self.connection.is_open:
-            self.connection.close()
-
-    def publish_message(self, package: Package, message: List[Any]):
+    def ensure_connection(self):
         if not self.connection or self.connection.is_closed:
             self.connect()
             # Нужно подождать, пока канал будет открыт
             while not self.connection.is_open:
                 continue
+
+    def __del__(self):
+        if self.connection and self.connection.is_open:
+            logger.info(" ------ Закрытие соединения с RabbitMQ ------")
+            self.connection.close()
+
+    def _get_message_body(self, queue):
+        method_frame, _, body = self.channel.basic_get(queue, auto_ack=False)
+        if method_frame:
+            return json.loads(body), method_frame.delivery_tag
+        return None, None
+
+    def _count_messages(self, queue):
+        cnt = self.channel.queue_declare(queue=queue, passive=True).method.message_count
+        return cnt
+
+    def publish_message(self, package: Package, message: List[Any]):
+        self.ensure_connection()
         try:
             self.channel.basic_publish(
                 exchange=package.exchange,
@@ -39,47 +54,38 @@ class RabbitMQManager:
                     delivery_mode=2,  # make message persistent
                 ),
             )
+            logger.info(
+                f"published message: {message} to {package.exchange} with routing_key: {package.routing_key}"
+            )
         except Exception as e:
             error = f"Ошибка отправки сообщения в очередь:\n {e}"
+            logger.error(error)
             raise Exception(error)
 
     def get_messages(self, query: GetMessages):
-        if not self.connection or self.connection.is_closed:
-            self.connect()
-            # Нужно подождать, пока канал будет открыт
-            while not self.connection.is_open:
-                continue
+        self.ensure_connection()
 
         package_message = PackageMessage(messages=[])
         try:
-            cnt = self.channel.queue_declare(
-                queue=query.queue, passive=True
-            ).method.message_count
+            cnt = self._count_messages(query.queue)
             if cnt:
-                for count_massages in range(cnt):
-                    method_frame, header_frame, body = self.channel.basic_get(
-                        query.queue, auto_ack=False
-                    )
-                    if method_frame:
-                        body = {
-                            "message": json.loads(body),
-                            "delivery_tag": method_frame.delivery_tag,
-                        }
-                        package_message.messages.append(body)
+                for _ in range(cnt):
+                    message, delivery_tag = self._get_message_body(query.queue)
+                    if message:
+                        package_message.messages.append(
+                            {"message": message, "delivery_tag": delivery_tag}
+                        )
                     else:
                         break
         except Exception as e:
             error = f"Ошибка получения сообщения из очереди:\n {e}"
+            logger.error(error)
             raise Exception(error)
-
+        logger.info(f"get {len(package_message.messages)} messages from {query.queue}")
         return package_message
 
     def ask_messages(self, query: Ask):
-        if not self.connection or self.connection.is_closed:
-            self.connect()
-            # Нужно подождать, пока канал будет открыт
-            while not self.connection.is_open:
-                continue
+        self.ensure_connection()
 
         cnt = len(query.delivery_tags)
         for tag in query.delivery_tags:
@@ -87,7 +93,9 @@ class RabbitMQManager:
                 self.channel.basic_ack(tag)
             except Exception as e:
                 error = f"Ошибка подтверждения сообщения:\n {e}"
+                logger.error(error)
                 raise Exception(error)
+        logger.info(f"{cnt} {self.plural_count(cnt)}- подтверждено")
         return {"message": f"{cnt} {self.plural_count(cnt)}- подтверждено"}
 
     @staticmethod
