@@ -5,7 +5,6 @@ from typing import List, Any
 
 from api_v1.esb.schemas import Package, GetMessages, PackageMessage, Ask
 from core.settings import settings
-from core.logger import logger
 
 
 class RabbitMQManager:
@@ -17,7 +16,6 @@ class RabbitMQManager:
 
     def connect(self):
         if not self.connection or self.connection.is_closed:
-            logger.info(" ------ Подключение к RabbitMQ ------")
             self.connection = pika.BlockingConnection(self.params)
             self.channel = self.connection.channel()
 
@@ -30,7 +28,6 @@ class RabbitMQManager:
 
     def __del__(self):
         if self.connection and self.connection.is_open:
-            logger.info(" ------ Закрытие соединения с RabbitMQ ------")
             self.connection.close()
 
     def _get_message_body(self, queue):
@@ -54,12 +51,9 @@ class RabbitMQManager:
                     delivery_mode=2,  # make message persistent
                 ),
             )
-            logger.info(
-                f"published message: {message} to {package.exchange} with routing_key: {package.routing_key}"
-            )
+
         except Exception as e:
             error = f"Ошибка отправки сообщения в очередь:\n {e}"
-            logger.error(error)
             raise Exception(error)
 
     def get_messages(self, query: GetMessages):
@@ -79,9 +73,7 @@ class RabbitMQManager:
                         break
         except Exception as e:
             error = f"Ошибка получения сообщения из очереди:\n {e}"
-            logger.error(error)
             raise Exception(error)
-        logger.info(f"get {len(package_message.messages)} messages from {query.queue}")
         return package_message
 
     def ask_messages(self, query: Ask):
@@ -93,9 +85,7 @@ class RabbitMQManager:
                 self.channel.basic_ack(tag)
             except Exception as e:
                 error = f"Ошибка подтверждения сообщения:\n {e}"
-                logger.error(error)
                 raise Exception(error)
-        logger.info(f"{cnt} {self.plural_count(cnt)}- подтверждено")
         return {"message": f"{cnt} {self.plural_count(cnt)}- подтверждено"}
 
     @staticmethod

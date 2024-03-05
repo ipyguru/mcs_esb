@@ -12,6 +12,9 @@ class RabbitMQSettings(BaseModel):
 class Settings(BaseSettings):
     api_v1_prefix: str = "/api/v1"
     rabbit: RabbitMQSettings = RabbitMQSettings()
+    sentry_sdk_dsn: str = (
+        "https://46ad83fa457e0c02222b6bd9c553be3a@o4506860071092224.ingest.us.sentry.io/4506860074631168"
+    )
 
 
 settings = Settings()
