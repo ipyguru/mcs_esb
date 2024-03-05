@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from .products.views import router as products_router
+from .producer.views import router as producer_router
 
 router = APIRouter()
-router.include_router(router=products_router, prefix="/products")
+router.include_router(router=producer_router, prefix="/producer")
