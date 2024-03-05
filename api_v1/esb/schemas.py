@@ -14,3 +14,8 @@ class Package(BaseModel):
 
 class PackageMessage(BaseModel):
     messages: List[Any]
+
+
+class Query(BaseModel):
+    exchange: str = "amq.topic"
+    queue: str
