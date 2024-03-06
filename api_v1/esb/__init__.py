@@ -1,10 +1,13 @@
 import json
 import pika
-
+import logging
 from typing import List, Any
 
 from api_v1.esb.schemas import Package, GetMessages, PackageMessage, Ask
 from core.settings import settings
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class RabbitMQManager:
@@ -14,8 +17,36 @@ class RabbitMQManager:
         self.connection = None
         self.channel = None
 
+    def initialize_queues(self):
+        self.ensure_connection()
+
+        try:
+            self.channel.exchange_declare(
+                exchange="amq.topic", exchange_type="topic", durable=True
+            )
+            self.channel.queue_declare(queue="catalog", durable=True)
+            self.channel.queue_bind(
+                exchange="amq.topic", queue="catalog", routing_key="catalog.*"
+            )
+            self.channel.queue_declare(queue="catalog.materials", durable=True)
+            self.channel.queue_bind(
+                exchange="amq.topic",
+                queue="catalog.materials",
+                routing_key="catalog.materials",
+            )
+            self.channel.queue_declare(queue="catalog.operations", durable=True)
+            self.channel.queue_bind(
+                exchange="amq.topic",
+                queue="catalog.operations",
+                routing_key="catalog.operations",
+            )
+        except Exception as e:
+            error = f"Ошибка инициализации очередей:\n {e}"
+            raise Exception(error)
+
     def connect(self):
         if not self.connection or self.connection.is_closed:
+            logger.info(f"Подключение к RabbitMQ: {self.host}")
             self.connection = pika.BlockingConnection(self.params)
             self.channel = self.connection.channel()
 
@@ -25,6 +56,9 @@ class RabbitMQManager:
             # Нужно подождать, пока канал будет открыт
             while not self.connection.is_open:
                 continue
+            logger.info(
+                f"Подключение к RabbitMQ: {self.host} установлено успешно?{self.connection.is_open}"
+            )
 
     def __del__(self):
         if self.connection and self.connection.is_open:

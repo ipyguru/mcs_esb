@@ -1,4 +1,6 @@
+import os
 from pathlib import Path
+
 from pydantic_settings import BaseSettings
 from pydantic import BaseModel
 
@@ -6,7 +8,7 @@ BASE_DIR = Path(__file__).parent.parent
 
 
 class RabbitMQSettings(BaseModel):
-    host: str = f"localhost"
+    host: str = os.getenv("RABBITMQ_HOST", "localhost")
 
 
 class Settings(BaseSettings):

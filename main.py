@@ -27,7 +27,6 @@ app = FastAPI(title="Шина предприятия", version="1.0.0")
 """
 app.include_router(api_v1_router, prefix=settings.api_v1_prefix)
 
-
 """
 Запуск сервера:
 """

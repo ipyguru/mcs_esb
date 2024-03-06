@@ -1,0 +1,22 @@
+version: "3.8"
+name: mcs_esb
+
+services:
+  rabbitmq:
+    image: "rabbitmq:management"
+    container_name: rabbitmq
+    restart: "unless-stopped"
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  mcs_esb:
+    build:
+      context: .
+    container_name: mcs_esb
+    depends_on:
+      - rabbitmq
+    ports:
+        - "80:80"
+    environment:
+      RABBITMQ_HOST: rabbitmq
