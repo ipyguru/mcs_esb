@@ -17,6 +17,13 @@ services:
     depends_on:
       - rabbitmq
     ports:
-        - "80:80"
+        - "8080:80"
     environment:
       RABBITMQ_HOST: rabbitmq
+
+networks:
+  default:
+    driver: bridge
+    ipam:
+      config:
+      - subnet: 192.168.201.0/24
