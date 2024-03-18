@@ -59,6 +59,10 @@ class RabbitMQManager:
             logger.info(
                 f"Подключение к RabbitMQ: {self.host} установлено успешно?{self.connection.is_open}"
             )
+        # Проверяем канал
+        if not self.channel.is_open:
+            self.channel = self.connection.channel()
+            logger.info(f"Канал к RabbitMQ: {self.host} запущен?{self.channel.is_open}")
 
     def __del__(self):
         if self.connection and self.connection.is_open:
