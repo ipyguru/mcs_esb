@@ -34,6 +34,30 @@ def initialize_queues():
     )
 
 
+@router.get("/connectionClose", status_code=status.HTTP_200_OK)
+def connection_close():
+    """
+    # Закрытие соединения
+    ```BSL
+        Заголовки = Новый Соответствие;
+        Заголовки.Вставить("content-type", "application/json");
+
+        HTTPЗапрос = Новый HTTPЗапрос("/api/v1/connectionClose", Заголовки);
+        HTTPСоединение = Новый HTTPСоединение("localhost", 80);
+        Ответ = HTTPСоединение.ВызватьHTTPМетод("GET", HTTPЗапрос);
+        СодержимоеОтвета = Ответ.ПолучитьТелоКакСтроку();
+        Если Не Ответ.КодСостояния = 200 Тогда
+            Сообщить("Ответ сервера: '" + СодержимоеОтвета + "', затрачено: " + Строка(ТекущаяДата()-Старт) + ", код ответа: " + Ответ.КодСостояния);
+            Возврат;
+        КонецЕсли;
+    ```
+    """
+    rabbitmq_manager.__del__()
+    return JSONResponse(
+        content={"message": "Соединение закрыто"}, status_code=status.HTTP_200_OK
+    )
+
+
 @router.post("/publish", response_model=Package, status_code=status.HTTP_201_CREATED)
 def publish_messages(package: Package):
     """
