@@ -24,21 +24,31 @@ class RabbitMQManager:
             self.channel.exchange_declare(
                 exchange="amq.topic", exchange_type="topic", durable=True
             )
+            # Catalog
             self.channel.queue_declare(queue="catalog", durable=True)
             self.channel.queue_bind(
                 exchange="amq.topic", queue="catalog", routing_key="catalog.*"
             )
+            # catalog.materials
             self.channel.queue_declare(queue="catalog.materials", durable=True)
             self.channel.queue_bind(
                 exchange="amq.topic",
                 queue="catalog.materials",
                 routing_key="catalog.materials",
             )
+            # catalog.operations
             self.channel.queue_declare(queue="catalog.operations", durable=True)
             self.channel.queue_bind(
                 exchange="amq.topic",
                 queue="catalog.operations",
                 routing_key="catalog.operations",
+            )
+            # catalog.myProducts
+            self.channel.queue_declare(queue="catalog.myProducts", durable=True)
+            self.channel.queue_bind(
+                exchange="amq.topic",
+                queue="catalog.myProducts",
+                routing_key="catalog.myProducts",
             )
         except Exception as e:
             error = f"Ошибка инициализации очередей:\n {e}"
