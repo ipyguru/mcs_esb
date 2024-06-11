@@ -1,7 +1,10 @@
 import json
 import pika
 import logging
+import time
+
 from typing import List, Any
+from pika.exceptions import AMQPConnectionError
 
 from api_v1.esb.schemas import Package, GetMessages, PackageMessage, Ask
 from core.settings import settings
@@ -17,8 +20,11 @@ class RabbitMQManager:
         self.connection = None
         self.channel = None
 
+        self._connect()
+        self.initialize_queues()
+
     def initialize_queues(self):
-        self.ensure_connection()
+        self.check_connection()
 
         try:
             self.channel.exchange_declare(
@@ -54,29 +60,25 @@ class RabbitMQManager:
             error = f"Ошибка инициализации очередей:\n {e}"
             raise Exception(error)
 
-    def connect(self):
-        if not self.connection or self.connection.is_closed:
-            logger.info(f"Подключение к RabbitMQ: {self.host}")
-            self.connection = pika.BlockingConnection(self.params)
-            self.channel = self.connection.channel()
+    def _connect(self):
+        logger.info(f"Подключение к RabbitMQ: {self.host}")
 
-    def ensure_connection(self):
-        if not self.connection or self.connection.is_closed:
-            self.connect()
-            # Нужно подождать, пока канал будет открыт
-            while not self.connection.is_open:
-                continue
-            logger.info(
-                f"Подключение к RabbitMQ: {self.host} установлено успешно?{self.connection.is_open}"
-            )
-        # Проверяем канал
-        if not self.channel.is_open:
-            self.channel = self.connection.channel()
-            logger.info(f"Канал к RabbitMQ: {self.host} запущен?{self.channel.is_open}")
+        tries = 0
+        while True:
+            try:
+                self.connection = pika.BlockingConnection(self.params)
+                self.channel = self.connection.channel()
+                if self.connection.is_open:
+                    break
+            except (AMQPConnectionError, Exception) as e:
+                time.sleep(5)
+                tries += 1
+                if tries == 20:
+                    raise AMQPConnectionError(e)
 
-    def __del__(self):
-        if self.connection and self.connection.is_open:
-            self.connection.close()
+    def check_connection(self):
+        if not self.connection or self.connection.is_closed:
+            self._connect()
 
     def _get_message_body(self, queue):
         method_frame, _, body = self.channel.basic_get(queue, auto_ack=False)
@@ -89,7 +91,7 @@ class RabbitMQManager:
         return cnt
 
     def publish_message(self, package: Package, message: List[Any]):
-        self.ensure_connection()
+        self.check_connection()
         try:
             self.channel.basic_publish(
                 exchange=package.exchange,
@@ -105,7 +107,7 @@ class RabbitMQManager:
             raise Exception(error)
 
     def get_messages(self, query: GetMessages):
-        self.ensure_connection()
+        self.check_connection()
 
         package_message = PackageMessage(messages=[])
         try:
@@ -125,7 +127,7 @@ class RabbitMQManager:
         return package_message
 
     def ask_messages(self, query: Ask):
-        self.ensure_connection()
+        self.check_connection()
 
         cnt = len(query.delivery_tags)
         for tag in query.delivery_tags:
@@ -135,6 +137,10 @@ class RabbitMQManager:
                 error = f"Ошибка подтверждения сообщения:\n {e}"
                 raise Exception(error)
         return {"message": f"{cnt} {self.plural_count(cnt)}- подтверждено"}
+
+    def close(self):
+        self.channel.close()
+        self.connection.close()
 
     @staticmethod
     def plural_count(count: int):
