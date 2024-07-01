@@ -35,10 +35,12 @@ class RabbitMQManager:
                 exchange_type=exchange.exchange_type,
                 durable=exchange.durable,
         )
+        self.close()
 
     def queue_declare(self, queue: Queue):
         self.check_connection()
         self.channel.queue_declare(queue=queue.queue, durable=queue.durable)
+        self.close()
 
     def queue_bind(self, bind: Bind):
         self.check_connection()
@@ -48,6 +50,7 @@ class RabbitMQManager:
             queue=bind.queue,
             routing_key=bind.routing_key,
         )
+        self.close()
 
     def initialize_queues(self):
         self.check_connection()
@@ -93,6 +96,7 @@ class RabbitMQManager:
                     delivery_mode=2,  # make message persistent
                 ),
             )
+            self.close()
 
         except Exception as e:
             error = f"Ошибка отправки сообщения в очередь:\n {e}"
@@ -113,6 +117,9 @@ class RabbitMQManager:
                         )
                     else:
                         break
+
+                self.close()
+
         except Exception as e:
             error = f"Ошибка получения сообщения из очереди:\n {e}"
             raise Exception(error)
@@ -128,6 +135,7 @@ class RabbitMQManager:
             except Exception as e:
                 error = f"Ошибка подтверждения сообщения:\n {e}"
                 raise Exception(error)
+        self.close()
         return {"message": f"{cnt} {self.plural_count(cnt)}- подтверждено"}
 
     def close(self):
