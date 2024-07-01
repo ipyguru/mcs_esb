@@ -26,77 +26,31 @@ class RabbitMQManager:
     def exchange_declare(self, exchange: Exchange):
         self.check_connection()
 
-        try:
-            self.channel.exchange_declare(
+        # Создаем если не существует
+        if exchange.exchange == "amq.topic":
+            return
+
+        self.channel.exchange_declare(
                 exchange=exchange.exchange,
                 exchange_type=exchange.exchange_type,
                 durable=exchange.durable,
-            )
-        except Exception as e:
-            error = f"Ошибка объявления обмена:\n {e}"
-            raise Exception(error)
+        )
 
     def queue_declare(self, queue: Queue):
         self.check_connection()
-
-        try:
-            self.channel.queue_declare(queue=queue.queue, durable=queue.durable)
-        except Exception as e:
-            error = f"Ошибка объявления очереди:\n {e}"
-            raise Exception(error)
+        self.channel.queue_declare(queue=queue.queue, durable=queue.durable)
 
     def queue_bind(self, bind: Bind):
         self.check_connection()
 
-        try:
-            self.channel.queue_bind(
-                exchange=bind.exchange,
-                queue=bind.queue,
-                routing_key=bind.routing_key,
-            )
-        except Exception as e:
-            error = f"Ошибка привязки очереди к обмену:\n {e}"
-            raise Exception(error)
+        self.channel.queue_bind(
+            exchange=bind.exchange,
+            queue=bind.queue,
+            routing_key=bind.routing_key,
+        )
 
     def initialize_queues(self):
-        # self.check_connection()
-
-        # try:
-
-            # self.channel.exchange_declare(
-            #     exchange="amq.topic", exchange_type="topic", durable=True
-            # )
-
-            # # Catalog
-            # self.channel.queue_declare(queue="catalog", durable=True)
-            # self.channel.queue_bind(
-            #     exchange="amq.topic", queue="catalog", routing_key="catalog.*"
-            # )
-            # catalog.materials
-            # self.channel.queue_declare(queue="catalog.materials", durable=True)
-            # self.channel.queue_bind(
-            #     exchange="amq.topic",
-            #     queue="catalog.materials",
-            #     routing_key="catalog.materials",
-            # )
-            # catalog.operations
-            # self.channel.queue_declare(queue="catalog.operations", durable=True)
-            # self.channel.queue_bind(
-            #     exchange="amq.topic",
-            #     queue="catalog.operations",
-            #     routing_key="catalog.operations",
-            # )
-            # catalog.myProducts
-            # self.channel.queue_declare(queue="catalog.myProducts", durable=True)
-            # self.channel.queue_bind(
-            #     exchange="amq.topic",
-            #     queue="catalog.myProducts",
-            #     routing_key="catalog.myProducts",
-            # )
-        # except Exception as e:
-        #     error = f"Ошибка инициализации очередей:\n {e}"
-        #     raise Exception(error)
-        pass
+        self.check_connection()
 
     def _connect(self):
         logger.info(f"Подключение к RabbitMQ: {self.host}")
