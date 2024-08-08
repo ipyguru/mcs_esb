@@ -16,7 +16,7 @@ logger.setLevel(logging.INFO)
 class RabbitMQManager:
     def __init__(self):
         self.host = settings.rabbit.host
-        self.params = pika.ConnectionParameters(self.host)
+        self.params = pika.ConnectionParameters(self.host, heartbeat=580)
         self.connection = None
         self.channel = None
 
