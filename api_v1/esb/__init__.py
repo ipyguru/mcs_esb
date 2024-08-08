@@ -131,8 +131,7 @@ class RabbitMQManager:
                 self.channel.basic_ack(tag)
             except Exception as e:
                 error = f"Ошибка подтверждения сообщения:\n {e}"
-                self.close()
-                raise Exception(error)
+                return {"message": error}
         return {"message": f"{cnt} {self.plural_count(cnt)}- подтверждено"}
 
     def close(self):
