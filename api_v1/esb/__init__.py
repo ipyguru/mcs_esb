@@ -136,8 +136,9 @@ class RabbitMQManager:
         return {"message": f"{cnt} {self.plural_count(cnt)}- подтверждено"}
 
     def close(self):
-        self.channel.close()
-        self.connection.close()
+        # Закрываем соединение
+        if self.connection and self.connection.is_open:
+            self.connection.close()
 
     @staticmethod
     def plural_count(count: int):
