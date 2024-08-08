@@ -34,6 +34,12 @@
 2. Получить изменения из репозитория командой `git pull`
 3. Перезапустить сервисы командой `docker-compose up -d --no-deps --build`
 
+## Если не срабатывает git push
+1. Перейти в папку с проектом
+2. Выполнить команду `eval "$(ssh-agent -s)"` для запуска ssh-agent
+3. Выполнить команду `--apple-use-keychain ~/.ssh/id_ed25519` для добавления ключа в ssh-agent
+4. Выполнить команду `ssh-add -K ~/.ssh/id_ed25519` для добавления ключа в ssh-agent
+5. Попробовать выполнить команду `git push`
 
 ## Авторы
 - [vbuoc](vbuoc@yandex.ru), [github](https://github.com/ipyguru)
